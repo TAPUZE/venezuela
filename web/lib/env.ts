@@ -7,6 +7,8 @@ export const env = {
   supabaseService: process.env.SUPABASE_SERVICE_ROLE_KEY,
   anthropicKey: process.env.ANTHROPIC_API_KEY,
   openaiKey: process.env.OPENAI_API_KEY,
+  // Default to the current-generation GPT-5.4 (override with OPENAI_MODEL).
+  openaiModel: process.env.OPENAI_MODEL ?? "gpt-5.4",
   pdfServiceUrl: process.env.PDF_SERVICE_URL ?? "http://127.0.0.1:8000",
   cronSecret: process.env.CRON_SECRET,
 };

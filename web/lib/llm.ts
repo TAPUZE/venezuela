@@ -54,8 +54,8 @@ async function callOpenAI(opts: LLMOptions): Promise<string> {
       authorization: `Bearer ${env.openaiKey!}`,
     },
     body: JSON.stringify({
-      model: "gpt-4o",
-      max_tokens: opts.maxTokens ?? 1024,
+      model: env.openaiModel,
+      max_completion_tokens: opts.maxTokens ?? 1024,
       response_format: opts.json ? { type: "json_object" } : undefined,
       messages: [{ role: "system", content: opts.system }, ...opts.messages],
     }),
