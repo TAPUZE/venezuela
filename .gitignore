@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Next.js build output
+web/.next/
+web/out/
+**/.next/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Test / temp artifacts
+pdf_test_out.pdf
+*.tmp
+
+# OS / editor
+.DS_Store
+Thumbs.db
+Untitled-*.md

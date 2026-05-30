@@ -1,0 +1,57 @@
+{
+  "form": "i-821instr",
+  "isXFA": false,
+  "count": 10,
+  "records": [
+    {
+      "name": "CB 2",
+      "type": "checkbox",
+      "options": null
+    },
+    {
+      "name": "CB 3",
+      "type": "checkbox",
+      "options": null
+    },
+    {
+      "name": "CB 4",
+      "type": "checkbox",
+      "options": null
+    },
+    {
+      "name": "CB 5",
+      "type": "checkbox",
+      "options": null
+    },
+    {
+      "name": "CB 6",
+      "type": "checkbox",
+      "options": null
+    },
+    {
+      "name": "CB 7",
+      "type": "checkbox",
+      "options": null
+    },
+    {
+      "name": "CB 8",
+      "type": "checkbox",
+      "options": null
+    },
+    {
+      "name": "CB 9",
+      "type": "checkbox",
+      "options": null
+    },
+    {
+      "name": "CB 11",
+      "type": "checkbox",
+      "options": null
+    },
+    {
+      "name": "CB 10",
+      "type": "checkbox",
+      "options": null
+    }
+  ]
+}

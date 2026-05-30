@@ -1,0 +1,41 @@
+{
+  "form": "I-589",
+  "edition": "01/20/25",
+  "note": "VERIFIED field names extracted from the live PDF (assets/field-maps/i-589.acro.txt). Checkbox export states from i-589.states.txt. Fields not yet located are listed under unmapped_todo.",
+  "text_fields": {
+    "alien_registration_number": "form1[0].#subform[0].PtAILine1_ANumber[0]",
+    "last_name": "form1[0].#subform[0].PtAILine4_LastName[0]",
+    "first_name": "form1[0].#subform[0].PtAILine5_FirstName[0]",
+    "middle_name": "form1[0].#subform[0].PtAILine6_MiddleName[0]",
+    "mailing_street": "form1[0].#subform[0].PtAILine8_StreetNumandName[0]",
+    "mailing_apt": "form1[0].#subform[0].PtAILine8_AptNumber[0]",
+    "mailing_state": "form1[0].#subform[0].PtAILine8_State[0]",
+    "mailing_zip": "form1[0].#subform[0].PtAILine8_Zipcode[0]",
+    "telephone_area_code": "form1[0].#subform[0].PtAILine8_AreaCode[0]",
+    "telephone_number": "form1[0].#subform[0].PtAILine8_TelephoneNumber[0]",
+    "residence_street": "form1[0].#subform[0].PtAILine9_StreetNumandName[0]",
+    "residence_apt": "form1[0].#subform[0].PtAILine9_AptNumber[0]",
+    "residence_city": "form1[0].#subform[0].PtAILine9_City[0]",
+    "residence_state": "form1[0].#subform[0].PtAILine9_State[0]",
+    "residence_zip": "form1[0].#subform[0].PtAILine9_ZipCode[0]",
+    "uscis_account_number": "form1[0].#subform[10].USCISOnlineAcctNumber[0]"
+  },
+  "date_fields": {},
+  "checkbox_fields": {
+    "applying_for_cat": {
+      "field": "form1[0].#subform[5].#subform[6].CheckBoxtorture[0]",
+      "on_value": "/Y"
+    }
+  },
+  "unmapped_todo": [
+    "date_of_birth (Part A.I Line 10) — not in subform[0]; locate exact field",
+    "place_of_birth, nationality, race/ethnicity",
+    "last_entry_date (Part A.I Line 15)",
+    "Part B persecution-basis checkboxes",
+    "Part C one-year-exception checkboxes"
+  ],
+  "overflow": {
+    "supplement_b_marker": "See Supplement B",
+    "supplement_header_fields": ["A-Number", "Full Name", "Date", "Signature"]
+  }
+}
