@@ -64,6 +64,7 @@ export interface InboundMessage {
   sessionId: string;
   body: string;
   mediaUrls: string[];
+  language?: string;
 }
 
 export interface IntakeReply {
@@ -74,7 +75,9 @@ export interface IntakeReply {
 export async function handleInbound(msg: InboundMessage): Promise<IntakeReply> {
   const sessionId = msg.sessionId;
   const state = await loadSession(sessionId);
-  const language = state.client.language ?? "es";
+  // The applicant's chosen language (from the disclaimer gate) takes priority and is sticky.
+  const language = msg.language === "en" ? "en" : msg.language === "es" ? "es" : state.client.language ?? "es";
+  state.client.language = language;
 
   // Consent gate: must accept the UPL disclaimer before any intake happens.
   if (!state.client.consented_at && !memorySessions.get(sessionId)?.client.consented_at) {
@@ -82,10 +85,14 @@ export async function handleInbound(msg: InboundMessage): Promise<IntakeReply> {
     if (text === "si" || text === "sí" || text === "yes" || text === "acepto") {
       state.client.consented_at = new Date().toISOString();
       await persist(sessionId, state, true);
-      const reply = "Gracias. Comencemos. " + (await firstQuestion(state, language));
+      const intro = language === "en" ? "Thank you. Let's begin. " : "Gracias. Comencemos. ";
+      const reply = intro + (await firstQuestion(state, language));
       return { reply, complete: false };
     }
-    const reply = `${DISCLAIMER.es}\n\nResponda SÍ para aceptar y continuar.`;
+    const reply =
+      language === "en"
+        ? `${DISCLAIMER.en}\n\nReply YES to accept and continue.`
+        : `${DISCLAIMER.es}\n\nResponda SÍ para aceptar y continuar.`;
     return { reply, complete: false };
   }
 

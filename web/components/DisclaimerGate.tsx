@@ -10,7 +10,7 @@ import { DISCLAIMER, DISCLAIMER_CLARIFICATION } from "@/lib/constants";
  * Requires explicit affirmative consent. No attorney-client relationship until a licensed
  * attorney signs a formal agreement.
  */
-export function DisclaimerGate({ onAccept }: { onAccept: () => void }) {
+export function DisclaimerGate({ onAccept }: { onAccept: (lang: "en" | "es") => void }) {
   const [lang, setLang] = useState<"en" | "es">("es");
 
   return (
@@ -54,7 +54,7 @@ export function DisclaimerGate({ onAccept }: { onAccept: () => void }) {
             whileTap={{ scale: 0.99 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
-            <Button fullWidth size="md" onClick={onAccept}>
+            <Button fullWidth size="md" onClick={() => onAccept(lang)}>
               {lang === "es" ? "Sí, entiendo y acepto" : "Yes, I understand and accept"}
             </Button>
           </motion.div>

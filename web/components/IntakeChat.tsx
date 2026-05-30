@@ -37,6 +37,7 @@ export function IntakeChat() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const sessionId = useRef<string>("");
+  const language = useRef<"en" | "es">("es");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export function IntakeChat() {
       const res = await fetch("/api/intake", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId: sessionId.current, message: text }),
+        body: JSON.stringify({ sessionId: sessionId.current, message: text, language: language.current }),
       });
       const data = await res.json();
       setMessages((m) => [...m, { role: "assistant", text: data.reply ?? "…" }]);
@@ -75,7 +76,7 @@ export function IntakeChat() {
       const res = await fetch("/api/intake", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId: sessionId.current, message: "sí" }),
+        body: JSON.stringify({ sessionId: sessionId.current, message: "sí", language: language.current }),
       });
       const data = await res.json();
       setMessages([{ role: "assistant", text: data.reply ?? "…" }]);
@@ -87,14 +88,14 @@ export function IntakeChat() {
   }
 
   if (!accepted) {
-    return <DisclaimerGate onAccept={start} />;
+    return <DisclaimerGate onAccept={(lang) => { language.current = lang; start(); }} />;
   }
 
   return (
     <Container size="sm" py="xl">
       <Stack gap="md">
         <Title order={3} tt="uppercase" fw={800}>
-          Admisión / Intake
+          {language.current === "en" ? "Intake" : "Admisión"}
         </Title>
 
         <Paper
@@ -129,7 +130,7 @@ export function IntakeChat() {
         <Group align="flex-end" gap="xs">
           <Box style={{ flex: 1 }}>
             <Textarea
-              placeholder="Escriba su respuesta…"
+              placeholder={language.current === "en" ? "Type your answer…" : "Escriba su respuesta…"}
               autosize
               minRows={1}
               maxRows={4}
