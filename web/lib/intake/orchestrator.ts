@@ -1,36 +1,34 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { runIntakeTurn } from "@/lib/agents/intake";
-import { sendWhatsApp } from "@/lib/twilio/send";
 import { DISCLAIMER } from "@/lib/constants";
 import type { Client } from "@/lib/types";
 
-// Orchestrates an inbound WhatsApp message: consent gate -> intake turn -> persist -> reply.
-// Works in mock mode (no Supabase/Twilio/LLM) using in-memory state so the flow is testable.
+// Orchestrates an in-app intake message: consent gate -> intake turn -> persist -> reply.
+// Transport-agnostic: the caller (the /api/intake route) supplies a per-browser sessionId and
+// receives the assistant reply to render in the chat UI. Works in mock mode (no Supabase/LLM)
+// using in-memory state so the flow is testable.
 
-const memoryClients = new Map<string, { client: Partial<Client>; collected: Record<string, unknown> }>();
+const memorySessions = new Map<string, { client: Partial<Client>; collected: Record<string, unknown> }>();
 
-function detectLanguage(_phone: string): string {
-  return "es"; // Venezuelan applicants default to Spanish.
-}
-
-async function loadClient(phone: string) {
+async function loadSession(sessionId: string) {
   const db = createServiceClient();
   if (!db) {
-    const existing = memoryClients.get(phone);
+    const existing = memorySessions.get(sessionId);
     if (existing) return existing;
     const fresh: { client: Partial<Client>; collected: Record<string, unknown> } = {
-      client: { phone_number: phone, language: "es", status: "intake" },
+      client: { phone_number: sessionId, language: "es", status: "intake" },
       collected: {},
     };
-    memoryClients.set(phone, fresh);
+    memorySessions.set(sessionId, fresh);
     return fresh;
   }
 
-  const { data: client } = await db.from("clients").select("*").eq("phone_number", phone).maybeSingle();
+  // The phone_number column is reused as a unique session identifier for in-app intake.
+  const { data: client } = await db.from("clients").select("*").eq("phone_number", sessionId).maybeSingle();
   if (!client) {
     const { data: created } = await db
       .from("clients")
-      .insert({ phone_number: phone, language: detectLanguage(phone), status: "intake" })
+      .insert({ phone_number: sessionId, language: "es", status: "intake" })
       .select("*")
       .single();
     return { client: created as Client, collected: {} as Record<string, unknown> };
@@ -43,10 +41,10 @@ async function loadClient(phone: string) {
   return { client: client as Client, collected: (caseFile?.structured_data ?? {}) as Record<string, unknown> };
 }
 
-async function persist(phone: string, state: { client: Partial<Client>; collected: Record<string, unknown> }, consented: boolean) {
+async function persist(sessionId: string, state: { client: Partial<Client>; collected: Record<string, unknown> }, consented: boolean) {
   const db = createServiceClient();
   if (!db) {
-    memoryClients.set(phone, state);
+    memorySessions.set(sessionId, state);
     return;
   }
   if (consented && state.client.id) {
@@ -63,37 +61,39 @@ async function persist(phone: string, state: { client: Partial<Client>; collecte
 }
 
 export interface InboundMessage {
-  from: string; // "whatsapp:+1..."
+  sessionId: string;
   body: string;
   mediaUrls: string[];
 }
 
-export async function handleInbound(msg: InboundMessage): Promise<string> {
-  const phone = msg.from.replace("whatsapp:", "");
-  const state = await loadClient(phone);
+export interface IntakeReply {
+  reply: string;
+  complete: boolean;
+}
+
+export async function handleInbound(msg: InboundMessage): Promise<IntakeReply> {
+  const sessionId = msg.sessionId;
+  const state = await loadSession(sessionId);
   const language = state.client.language ?? "es";
 
   // Consent gate: must accept the UPL disclaimer before any intake happens.
-  if (!state.client.consented_at && !memoryClients.get(phone)?.client.consented_at) {
+  if (!state.client.consented_at && !memorySessions.get(sessionId)?.client.consented_at) {
     const text = msg.body.trim().toLowerCase();
     if (text === "si" || text === "sí" || text === "yes" || text === "acepto") {
       state.client.consented_at = new Date().toISOString();
-      await persist(phone, state, true);
+      await persist(sessionId, state, true);
       const reply = "Gracias. Comencemos. " + (await firstQuestion(state, language));
-      await sendWhatsApp(msg.from, reply);
-      return reply;
+      return { reply, complete: false };
     }
     const reply = `${DISCLAIMER.es}\n\nResponda SÍ para aceptar y continuar.`;
-    await sendWhatsApp(msg.from, reply);
-    return reply;
+    return { reply, complete: false };
   }
 
   // Intake turn.
   const result = await runIntakeTurn({ language, collected: state.collected, userMessage: msg.body });
   state.collected = result.collected;
-  await persist(phone, state, false);
-  await sendWhatsApp(msg.from, result.reply);
-  return result.reply;
+  await persist(sessionId, state, false);
+  return { reply: result.reply, complete: result.complete };
 }
 
 async function firstQuestion(state: { collected: Record<string, unknown> }, language: string): Promise<string> {
