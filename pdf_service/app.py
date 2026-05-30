@@ -21,8 +21,19 @@ from pypdf import PdfReader, PdfWriter
 from pypdf.generic import BooleanObject, NameObject
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FORMS_DIR = os.path.join(ROOT, "assets", "uscis-forms")
-MAPS_DIR = os.path.join(ROOT, "assets", "field-maps")
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _assets_root() -> str:
+    """Prefer assets bundled next to app.py (deployed service); fall back to repo root (local dev)."""
+    if os.path.isdir(os.path.join(HERE, "assets")):
+        return HERE
+    return ROOT
+
+
+_ASSETS = _assets_root()
+FORMS_DIR = os.path.join(_ASSETS, "assets", "uscis-forms")
+MAPS_DIR = os.path.join(_ASSETS, "assets", "field-maps")
 
 app = FastAPI(title="Amparo PDF Service")
 
