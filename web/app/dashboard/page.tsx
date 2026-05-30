@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 
 function threatFor(status: string): QueueRow["threat"] {
   if (status === "flagged_for_review") return "HIGH";
-  if (status === "evidence_review" || status === "intake") return "MEDIUM";
+  if (status === "ready_for_attorney") return "HIGH";
+  if (status === "evidence_review" || status === "intake" || status === "drafting") return "MEDIUM";
   return "LOW";
 }
 
@@ -39,6 +40,11 @@ export default async function DashboardPage() {
       };
     }),
   );
+
+  // Surface drafts awaiting the attorney first.
+  const priority = (s: string) =>
+    s === "ready_for_attorney" ? 0 : s === "flagged_for_review" ? 1 : s === "ready_to_file" ? 2 : 3;
+  rows.sort((a, b) => priority(a.status) - priority(b.status));
 
   return <DashboardClient rows={rows} mockMode={!isLiveData} />;
 }

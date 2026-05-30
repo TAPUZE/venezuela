@@ -2,9 +2,13 @@
 
 export type CaseStatus =
   | "intake"
+  | "drafting"
+  | "ready_for_attorney"
   | "evidence_review"
   | "flagged_for_review"
+  | "approved"
   | "ready_to_file"
+  | "sent"
   | "completed";
 
 export type DocumentType =

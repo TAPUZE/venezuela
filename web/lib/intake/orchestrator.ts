@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { runIntakeTurn } from "@/lib/agents/intake";
+import { runAutoDraft } from "@/lib/pipeline/autodraft";
 import { DISCLAIMER } from "@/lib/constants";
 import type { Client } from "@/lib/types";
 
@@ -16,7 +17,7 @@ async function loadSession(sessionId: string) {
     const existing = memorySessions.get(sessionId);
     if (existing) return existing;
     const fresh: { client: Partial<Client>; collected: Record<string, unknown> } = {
-      client: { phone_number: sessionId, language: "es", status: "intake" },
+      client: { id: sessionId, phone_number: sessionId, language: "es", status: "intake" },
       collected: {},
     };
     memorySessions.set(sessionId, fresh);
@@ -100,6 +101,26 @@ export async function handleInbound(msg: InboundMessage): Promise<IntakeReply> {
   const result = await runIntakeTurn({ language, collected: state.collected, userMessage: msg.body });
   state.collected = result.collected;
   await persist(sessionId, state, false);
+
+  // Intake complete -> automatically assemble the full draft for the attorney.
+  if (result.complete) {
+    try {
+      await runAutoDraft({
+        clientId: state.client.id ?? sessionId,
+        phone: state.client.phone_number ?? sessionId,
+        language,
+        collected: state.collected,
+      });
+    } catch (e) {
+      console.error("auto-draft failed", e);
+    }
+    const done =
+      language === "en"
+        ? "Thank you — your intake is complete. We have drafted your case and a supervised attorney will now review, finalize, and file it. You do not need to do anything else right now."
+        : "Gracias — su admisión está completa. Hemos preparado el borrador de su caso y un abogado supervisado lo revisará, finalizará y presentará. No necesita hacer nada más por ahora.";
+    return { reply: done, complete: true };
+  }
+
   return { reply: result.reply, complete: result.complete };
 }
 
